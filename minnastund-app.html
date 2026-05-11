@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Minna Stund — A moment, remembered</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --pine: #1a2e1e; --forest: #2d4a32; --sage: #4a7c59; --moss: #6b9e7a;
+  --cream: #f5f0e8; --stone: #e8e0d0; --blush: #f0e8d8; --gold: #c4963a;
+}
+html, body { min-height: 100vh; background: var(--cream); font-family: 'Jost', sans-serif; color: var(--pine); -webkit-font-smoothing: antialiased; }
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+.app-header { background: var(--pine); padding: 18px 24px 14px; text-align: center; border-bottom: 1px solid rgba(196,150,58,0.3); flex-shrink: 0; position: relative; }
+.app-header::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(196,150,58,0.05) 14px, rgba(196,150,58,0.05) 15px), repeating-linear-gradient(-45deg, transparent, transparent 14px, rgba(196,150,58,0.05) 14px, rgba(196,150,58,0.05) 15px); pointer-events: none; }
+.wordmark { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; letter-spacing: 2px; color: var(--cream); position: relative; z-index: 1; }
+.wordmark .ital { color: var(--gold); font-style: italic; }
+.wordmark .dot { color: var(--gold); margin: 0 5px; }
+.tagline { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(245,240,232,0.45); margin-top: 3px; font-weight: 300; position: relative; z-index: 1; }
+.progress-bar { background: var(--pine); padding: 0 24px 14px; flex-shrink: 0; }
+.progress-steps { display: flex; align-items: center; max-width: 360px; margin: 0 auto; }
+.step-dot { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(196,150,58,0.35); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: rgba(245,240,232,0.35); flex-shrink: 0; transition: all 0.3s; }
+.step-dot.done { background: var(--gold); border-color: var(--gold); color: var(--pine); }
+.step-dot.active { border-color: var(--gold); color: var(--gold); }
+.step-line { flex: 1; height: 1px; background: rgba(196,150,58,0.2); transition: background 0.3s; }
+.step-line.done { background: var(--gold); }
+.scroll-content { flex: 1; overflow-y: auto; padding: 26px 24px 110px; max-width: 480px; width: 100%; margin: 0 auto; }
+.section-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; color: var(--pine); margin-bottom: 6px; line-height: 1.2; }
+.section-subtitle { font-size: 13px; color: var(--sage); font-weight: 300; margin-bottom: 26px; line-height: 1.6; }
+.pack-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }
+.pack-card { background: white; border: 1.5px solid var(--stone); border-radius: 12px; padding: 15px 17px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 13px; position: relative; overflow: hidden; }
+.pack-card:hover { border-color: var(--moss); }
+.pack-card.selected { border-color: var(--forest); background: #f8fdf9; }
+.pack-card.selected::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--forest); border-radius: 12px 0 0 12px; }
+.pack-icon { width: 46px; height: 46px; background: var(--blush); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+.pack-card.selected .pack-icon { background: #e8f5ec; }
+.pack-dots { display: grid; gap: 3px; }
+.pack-dots.n3 { grid-template-columns: repeat(3,9px); }
+.pack-dots.n4 { grid-template-columns: repeat(4,7px); }
+.pack-dots.n5 { grid-template-columns: repeat(5,6px); }
+.pack-dots.n6 { grid-template-columns: repeat(3,9px); grid-template-rows: repeat(2,9px); }
+.pack-dots.n7 { grid-template-columns: repeat(4,7px); grid-template-rows: repeat(2,7px); }
+.pack-dots.n8 { grid-template-columns: repeat(4,7px); grid-template-rows: repeat(2,7px); }
+.pack-dots.n9 { grid-template-columns: repeat(3,9px); grid-template-rows: repeat(3,9px); }
+.dot-sq { width: 9px; height: 9px; border-radius: 2px; background: var(--stone); transition: background 0.2s; }
+.pack-dots.n4 .dot-sq, .pack-dots.n5 .dot-sq, .pack-dots.n7 .dot-sq, .pack-dots.n8 .dot-sq { width: 7px; height: 7px; }
+.pack-dots.n5 .dot-sq { width: 6px; height: 6px; }
+.pack-card.selected .dot-sq { background: var(--sage); }
+.pack-info { flex: 1; }
+.pack-name { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 500; color: var(--pine); margin-bottom: 2px; }
+.pack-desc { font-size: 12px; color: var(--sage); font-weight: 300; }
+.pack-price { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--pine); text-align: right; white-space: nowrap; }
+.pack-price-note { font-size: 10px; color: var(--sage); font-weight: 300; display: block; text-align: right; }
+.pack-badge { position: absolute; top: 10px; right: 10px; background: var(--forest); color: var(--cream); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+.currency-row { display: flex; align-items: center; gap: 7px; margin-bottom: 20px; flex-wrap: wrap; }
+.currency-label { font-size: 12px; color: var(--sage); font-weight: 300; }
+.currency-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--stone); background: white; font-size: 12px; color: var(--sage); cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 400; transition: all 0.2s; }
+.currency-btn.active { background: var(--pine); border-color: var(--pine); color: var(--cream); }
+.bottom-cta { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--stone); padding: 14px 24px 28px; z-index: 10; }
+.cta-btn { width: 100%; background: var(--pine); color: var(--cream); border: none; border-radius: 10px; padding: 15px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 400; letter-spacing: 1px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.cta-btn:hover { background: var(--forest); }
+.cta-btn:disabled { background: var(--stone); color: var(--moss); cursor: default; }
+.field-group { margin-bottom: 17px; }
+.field-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--sage); font-weight: 500; margin-bottom: 7px; display: block; }
+.field-input { width: 100%; border: 1.5px solid var(--stone); border-radius: 10px; padding: 13px 15px; font-family: 'Jost', sans-serif; font-size: 15px; color: var(--pine); background: white; outline: none; transition: border-color 0.2s; -webkit-appearance: none; appearance: none; }
+.field-input:focus { border-color: var(--forest); }
+.field-input::placeholder { color: var(--moss); opacity: 0.55; }
+select.field-input { cursor: pointer; }
+.hotel-other { display: none; margin-top: 9px; }
+.hotel-other.visible { display: block; }
+.upload-zone { border: 2px dashed var(--stone); border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; }
+.upload-zone:hover { border-color: var(--moss); background: #fdfcf9; }
+.upload-icon { font-size: 28px; color: var(--sage); margin-bottom: 10px; }
+.upload-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--pine); margin-bottom: 5px; }
+.upload-hint { font-size: 12px; color: var(--sage); font-weight: 300; }
+#photo-input { display: none; }
+.photos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
+.photo-thumb { aspect-ratio: 1; border-radius: 8px; background: var(--stone); position: relative; overflow: hidden; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0,0,0,0.55); border-radius: 50%; color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.photo-count-tag { background: var(--forest); color: var(--cream); padding: 7px 15px; border-radius: 20px; font-size: 13px; display: inline-block; margin-bottom: 13px; }
+.caption-toggle { background: var(--blush); border: 1px solid var(--stone); border-radius: 10px; padding: 13px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--pine); margin-bottom: 10px; transition: all 0.2s; }
+.caption-toggle:hover { background: var(--stone); }
+.caption-arrow { transition: transform 0.2s; font-size: 16px; color: var(--sage); }
+.caption-arrow.open { transform: rotate(180deg); }
+.caption-content { display: none; }
+.caption-content.open { display: block; }
+.summary-card { background: var(--pine); border-radius: 16px; padding: 22px; margin-bottom: 20px; position: relative; overflow: hidden; }
+.summary-card::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(196,150,58,0.07) 14px, rgba(196,150,58,0.07) 15px), repeating-linear-gradient(-45deg, transparent, transparent 14px, rgba(196,150,58,0.07) 14px, rgba(196,150,58,0.07) 15px); pointer-events: none; }
+.summary-wm { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: rgba(245,240,232,0.45); margin-bottom: 14px; letter-spacing: 2px; }
+.summary-wm .ital { font-style: italic; color: var(--gold); }
+.summary-row { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; border-bottom: 1px solid rgba(245,240,232,0.08); position: relative; z-index: 1; }
+.summary-row:last-of-type { border-bottom: none; padding-bottom: 0; }
+.summary-label { font-size: 12px; color: rgba(245,240,232,0.5); font-weight: 300; }
+.summary-value { font-size: 14px; color: var(--cream); text-align: right; max-width: 60%; }
+.summary-total-label { font-size: 11px; color: rgba(245,240,232,0.45); font-weight: 300; }
+.summary-total { font-family: 'Cormorant Garamond', serif; font-size: 30px; color: var(--cream); }
+.summary-fx-note { font-size: 11px; color: rgba(245,240,232,0.35); font-weight: 300; position: relative; z-index: 1; margin-top: 8px; }
+.pay-section-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--sage); margin-bottom: 12px; font-weight: 500; }
+.payment-options { display: flex; flex-direction: column; gap: 9px; margin-bottom: 20px; }
+.payment-option { border: 1.5px solid var(--stone); border-radius: 10px; padding: 13px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; background: white; }
+.payment-option:hover { border-color: var(--moss); }
+.payment-option.selected { border-color: var(--forest); background: #f8fdf9; }
+.pay-radio { width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--stone); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.payment-option.selected .pay-radio { border-color: var(--forest); background: var(--forest); }
+.payment-option.selected .pay-radio::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: white; }
+.pay-name { font-size: 14px; color: var(--pine); }
+.pay-sub { font-size: 11px; color: var(--sage); font-weight: 300; }
+.pay-logo { margin-left: auto; font-size: 11px; font-weight: 500; color: var(--sage); background: var(--stone); padding: 3px 8px; border-radius: 4px; }
+.info-box { background: var(--blush); border: 1px solid var(--stone); border-radius: 10px; padding: 13px 15px; display: flex; gap: 11px; margin-bottom: 16px; }
+.info-icon { font-size: 15px; color: var(--sage); flex-shrink: 0; margin-top: 1px; }
+.info-text { font-size: 13px; color: var(--sage); font-weight: 300; line-height: 1.5; }
+.back-btn { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--sage); cursor: pointer; background: none; border: none; font-family: 'Jost', sans-serif; padding: 0; margin-bottom: 22px; transition: color 0.2s; }
+.back-btn:hover { color: var(--forest); }
+.confirm-wrap { min-height: 100vh; background: var(--pine); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; text-align: center; position: relative; overflow: hidden; }
+.confirm-wrap::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(196,150,58,0.06) 18px, rgba(196,150,58,0.06) 19px), repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(196,150,58,0.06) 18px, rgba(196,150,58,0.06) 19px); }
+.confirm-ring { width: 74px; height: 74px; border-radius: 50%; border: 1.5px solid var(--gold); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; position: relative; z-index: 1; animation: pulse 2.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(196,150,58,0.25); } 50% { box-shadow: 0 0 0 14px rgba(196,150,58,0); } }
+.confirm-check { font-size: 26px; color: var(--gold); }
+.confirm-title { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 400; color: var(--cream); margin-bottom: 10px; position: relative; z-index: 1; line-height: 1.2; }
+.confirm-sub { font-size: 14px; color: rgba(245,240,232,0.6); font-weight: 300; margin-bottom: 30px; position: relative; z-index: 1; line-height: 1.6; max-width: 260px; }
+.confirm-ref { background: rgba(245,240,232,0.07); border: 1px solid rgba(196,150,58,0.3); border-radius: 12px; padding: 18px 28px; position: relative; z-index: 1; margin-bottom: 26px; width: 100%; max-width: 280px; }
+.confirm-ref-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+.confirm-ref-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--cream); letter-spacing: 4px; }
+.confirm-detail { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(245,240,232,0.55); font-weight: 300; position: relative; z-index: 1; margin-bottom: 8px; }
+.gold-line { width: 36px; height: 1px; background: var(--gold); opacity: 0.3; margin: 22px auto; position: relative; z-index: 1; }
+.confirm-tagline { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: rgba(245,240,232,0.35); position: relative; z-index: 1; }
+.welcome-hero { background: var(--pine); padding: 46px 28px 38px; text-align: center; position: relative; overflow: hidden; flex-shrink: 0; }
+.welcome-hero::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(196,150,58,0.06) 18px, rgba(196,150,58,0.06) 19px), repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(196,150,58,0.06) 18px, rgba(196,150,58,0.06) 19px); }
+.welcome-wm { font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 300; color: var(--cream); letter-spacing: 3px; position: relative; z-index: 1; margin-bottom: 5px; }
+.welcome-wm .ital { color: var(--gold); font-style: italic; }
+.welcome-wm .dot { color: var(--gold); margin: 0 6px; }
+.welcome-tl { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(245,240,232,0.45); position: relative; z-index: 1; font-weight: 300; }
+.welcome-gl { width: 36px; height: 1px; background: var(--gold); opacity: 0.4; margin: 18px auto; position: relative; z-index: 1; }
+.welcome-quote { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-style: italic; color: rgba(245,240,232,0.7); font-weight: 300; position: relative; z-index: 1; line-height: 1.4; max-width: 270px; margin: 0 auto; }
+.welcome-body { flex: 1; padding: 28px 24px 110px; max-width: 480px; width: 100%; margin: 0 auto; }
+.steps-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sage); font-weight: 500; margin-bottom: 15px; }
+.how-step { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 14px; }
+.how-num { width: 27px; height: 27px; border-radius: 50%; border: 1px solid var(--stone); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--sage); flex-shrink: 0; margin-top: 1px; }
+.how-text { font-size: 14px; color: var(--pine); font-weight: 300; line-height: 1.5; }
+.how-text strong { font-weight: 500; color: var(--forest); }
+.welcome-card { background: white; border: 1px solid var(--stone); border-radius: 12px; padding: 16px; margin-bottom: 11px; display: flex; align-items: flex-start; gap: 13px; }
+.welcome-card-sym { font-size: 14px; color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+.welcome-card-text { font-size: 13px; color: var(--sage); font-weight: 300; line-height: 1.55; }
+.welcome-card-text strong { color: var(--forest); font-weight: 500; }
+.fade-in { animation: fadeIn 0.35s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-hero">
+    <div class="welcome-wm">Minna<span class="dot">·</span><span class="ital">Stund</span></div>
+    <div class="welcome-tl">A moment, remembered</div>
+    <div class="welcome-gl"></div>
+    <div class="welcome-quote">"Your holiday, beautifully held"</div>
+  </div>
+  <div class="welcome-body fade-in">
+    <div style="margin-bottom:24px;">
+      <div class="steps-label">How it works</div>
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div class="how-text"><strong>Choose your pack</strong> — select how many memories you would like, from 3 to 9</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div class="how-text"><strong>Upload your photos</strong> — directly from your camera roll, takes seconds</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div class="how-text"><strong>We craft and deliver</strong> — your memory set is made locally and ready to collect from reception</div>
+      </div>
+    </div>
+    <div class="welcome-card">
+      <div class="welcome-card-sym">✦</div>
+      <div class="welcome-card-text">Your photographs transformed into <strong>premium magnetic memories</strong> — beautifully crafted and sized to display on a shaped metal backing anywhere in your home.</div>
+    </div>
+    <div class="welcome-card">
+      <div class="welcome-card-sym">◎</div>
+      <div class="welcome-card-text"><strong>Crafted locally in Stockholm.</strong> Order today and collect your memory set from hotel reception when ready.</div>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="cta-btn" onclick="goTo('screen-pack')">Create your memory set &nbsp;→</button>
+  </div>
+</div>
+
+<!-- STEP 1: PACK -->
+<div class="screen" id="screen-pack">
+  <div class="app-header">
+    <div class="wordmark">Minna<span class="dot">·</span><span class="ital">Stund</span></div>
+    <div class="tagline">A moment, remembered</div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-steps">
+      <div class="step-dot active">1</div><div class="step-line"></div>
+      <div class="step-dot">2</div><div class="step-line"></div>
+      <div class="step-dot">3</div><div class="step-line"></div>
+      <div class="step-dot">4</div>
+    </div>
+  </div>
+  <div class="scroll-content fade-in">
+    <div class="section-title">Choose your pack</div>
+    <div class="section-subtitle">Each memory is a premium keepsake, crafted to be displayed and treasured.</div>
+    <div class="currency-row">
+      <span class="currency-label">Show prices in</span>
+      <button class="currency-btn active" onclick="setCurrency('SEK',this)">SEK</button>
+      <button class="currency-btn" onclick="setCurrency('GBP',this)">GBP</button>
+      <button class="currency-btn" onclick="setCurrency('EUR',this)">EUR</button>
+      <button class="currency-btn" onclick="setCurrency('USD',this)">USD</button>
+      <button class="currency-btn" onclick="setCurrency('ZAR',this)">ZAR</button>
+    </div>
+    <div class="pack-grid" id="pack-grid"></div>
+    <div class="info-box">
+      <div class="info-icon">ⓘ</div>
+      <div class="info-text">All orders are charged in SEK. Other currencies are shown for guidance only.</div>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="cta-btn" id="pack-cta" disabled onclick="goTo('screen-details')">Continue &nbsp;→</button>
+  </div>
+</div>
+
+<!-- STEP 2: DETAILS -->
+<div class="screen" id="screen-details">
+  <div class="app-header">
+    <div class="wordmark">Minna<span class="dot">·</span><span class="ital">Stund</span></div>
+    <div class="tagline">A moment, remembered</div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-steps">
+      <div class="step-dot done">✓</div><div class="step-line done"></div>
+      <div class="step-dot active">2</div><div class="step-line"></div>
+      <div class="step-dot">3</div><div class="step-line"></div>
+      <div class="step-dot">4</div>
+    </div>
+  </div>
+  <div class="scroll-content fade-in">
+    <button class="back-btn" onclick="goTo('screen-pack')">← Back</button>
+    <div class="section-title">Your details</div>
+    <div class="section-subtitle">Just a few things so we can reach you when your order is ready.</div>
+    <div class="field-group">
+      <label class="field-label">Your name</label>
+      <input class="field-input" type="text" id="guest-name" placeholder="First name" autocomplete="given-name">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Hotel</label>
+      <select class="field-input" id="guest-hotel" onchange="handleHotelChange(this)">
+        <option value="">Select your hotel</option>
+        <option>At Six</option>
+        <option>Nobis Hotel</option>
+        <option>Hobo Hotel</option>
+        <option>Miss Clara</option>
+        <option>Hotel Diplomat</option>
+        <option>Grand Hotel Stockholm</option>
+        <option>Lydmar Hotel</option>
+        <option value="other">My hotel is not listed</option>
+      </select>
+      <input class="field-input hotel-other" type="text" id="guest-hotel-other" placeholder="Enter your hotel name">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Room number</label>
+      <input class="field-input" type="text" id="guest-room" placeholder="e.g. 214" inputmode="numeric">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Mobile number</label>
+      <input class="field-input" type="tel" id="guest-phone" placeholder="+ country code" autocomplete="tel">
+    </div>
+    <div class="info-box">
+      <div class="info-icon">◎</div>
+      <div class="info-text">We will message this number when your memory set is ready to collect from reception.</div>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="cta-btn" onclick="validateDetails()">Continue &nbsp;→</button>
+  </div>
+</div>
+
+<!-- STEP 3: PHOTOS -->
+<div class="screen" id="screen-photos">
+  <div class="app-header">
+    <div class="wordmark">Minna<span class="dot">·</span><span class="ital">Stund</span></div>
+    <div class="tagline">A moment, remembered</div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-steps">
+      <div class="step-dot done">✓</div><div class="step-line done"></div>
+      <div class="step-dot done">✓</div><div class="step-line done"></div>
+      <div class="step-dot active">3</div><div class="step-line"></div>
+      <div class="step-dot">4</div>
+    </div>
+  </div>
+  <div class="scroll-content fade-in">
+    <button class="back-btn" onclick="goTo('screen-details')">← Back</button>
+    <div class="section-title">Your photos</div>
+    <div class="section-subtitle" id="photo-subtitle">Upload up to <strong id="photo-max-label">9</strong> of your favourite photos from this trip.</div>
+    <div id="photos-container"></div>
+    <input type="file" id="photo-input" accept="image/*" multiple>
+    <div style="margin-top:20px;">
+      <div class="caption-toggle" onclick="toggleCaption(this)">
+        <span>Add a caption &nbsp;<span style="font-size:11px;color:var(--sage);font-weight:300;">(optional)</span></span>
+        <span class="caption-arrow">▾</span>
+      </div>
+      <div class="caption-content">
+        <div class="field-group">
+          <label class="field-label">Caption text</label>
+          <input class="field-input" type="text" id="caption-text" placeholder="e.g. Stockholm, Summer 2025">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Style</label>
+          <select class="field-input" id="caption-font">
+            <option>Classic serif — elegant &amp; timeless</option>
+            <option>Modern sans — clean &amp; minimal</option>
+            <option>Script — warm &amp; personal</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="cta-btn" id="photos-cta" disabled onclick="goTo('screen-review')">Review order &nbsp;→</button>
+  </div>
+</div>
+
+<!-- STEP 4: REVIEW -->
+<div class="screen" id="screen-review">
+  <div class="app-header">
+    <div class="wordmark">Minna<span class="dot">·</span><span class="ital">Stund</span></div>
+    <div class="tagline">A moment, remembered</div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-steps">
+      <div class="step-dot done">✓</div><div class="step-line done"></div>
+      <div class="step-dot done">✓</div><div class="step-line done"></div>
+      <div class="step-dot done">✓</div><div class="step-line done"></div>
+      <div class="step-dot active">4</div>
+    </div>
+  </div>
+  <div class="scroll-content fade-in">
+    <button class="back-btn" onclick="goTo('screen-photos')">← Back</button>
+    <div class="section-title">Review &amp; pay</div>
+    <div class="section-subtitle">Check your order and complete payment below.</div>
+    <div class="summary-card">
+      <div class="summary-wm">Minna<span class="ital">·Stund</span></div>
+      <div class="summary-row"><span class="summary-label">Pack</span><span class="summary-value" id="review-pack">—</span></div>
+      <div class="summary-row"><span class="summary-label">Guest</span><span class="summary-value" id="review-name">—</span></div>
+      <div class="summary-row"><span class="summary-label">Hotel &amp; room</span><span class="summary-value" id="review-hotel">—</span></div>
+      <div class="summary-row"><span class="summary-label">Photos</span><span class="summary-value" id="review-photos">—</span></div>
+      <div class="summary-row"><span class="summary-total-label">Total (SEK)</span><span class="summary-total" id="review-total">—</span></div>
+      <div class="summary-fx-note" id="review-fx-note"></div>
+    </div>
+    <div class="pay-section-label">Payment method</div>
+    <div class="payment-options">
+      <div class="payment-option selected" onclick="selectPayment(this)">
+        <div class="pay-radio"></div>
+        <div><div class="pay-name">Swish</div><div class="pay-sub">Swedish mobile payment — instant</div></div>
+        <div class="pay-logo">Swish</div>
+      </div>
+      <div class="payment-option" onclick="selectPayment(this)">
+        <div class="pay-radio"></div>
+        <div><div class="pay-name">Apple Pay</div><div class="pay-sub">One tap — no card entry needed</div></div>
+        <div class="pay-logo">🍎</div>
+      </div>
+      <div class="payment-option" onclick="selectPayment(this)">
+        <div class="pay-radio"></div>
+        <div><div class="pay-name">Google Pay</div><div class="pay-sub">One tap — no card entry needed</div></div>
+        <div class="pay-logo">G</div>
+      </div>
+      <div class="payment-option" onclick="selectPayment(this)">
+        <div class="pay-radio"></div>
+        <div><div class="pay-name">Credit or debit card</div><div class="pay-sub">Visa, Mastercard, Amex</div></div>
+        <div class="pay-logo">💳</div>
+      </div>
+    </div>
+    <div class="info-box">
+      <div class="info-icon">🔒</div>
+      <div class="info-text">Payments processed securely via Stripe. Your card details are never stored.</div>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="cta-btn" onclick="placeOrder()">Complete order &nbsp;→</button>
+  </div>
+</div>
+
+<!-- CONFIRMATION -->
+<div class="screen" id="screen-confirm">
+  <div class="confirm-wrap">
+    <div class="confirm-ring"><span class="confirm-check">✓</span></div>
+    <div class="confirm-title">Your memories<br>are being made</div>
+    <div class="confirm-sub">We are crafting your memory set right now at our Stockholm studio.</div>
+    <div class="confirm-ref">
+      <div class="confirm-ref-label">Order reference</div>
+      <div class="confirm-ref-num" id="confirm-ref">MS-0000</div>
+    </div>
+    <div class="confirm-detail">◎ &nbsp;Collect from hotel reception when ready</div>
+    <div class="confirm-detail">◌ &nbsp;We will message you when it's ready</div>
+    <div class="gold-line"></div>
+    <div class="confirm-tagline">A moment, remembered.</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// PRICING CONFIG — edit ONLY this block to update prices.
+// All screens and currency displays update automatically.
+// ─────────────────────────────────────────────────────────────
+var PACKS = [
+  { id: 3, name: '3 Memories', desc: 'A beautiful trio',    priceSEK: 125, dots: 'n3' },
+  { id: 4, name: '4 Memories', desc: 'A small collection',  priceSEK: 155, dots: 'n4' },
+  { id: 5, name: '5 Memories', desc: 'Half a story',        priceSEK: 185, dots: 'n5' },
+  { id: 6, name: '6 Memories', desc: 'A full story',        priceSEK: 219, dots: 'n6', popular: true },
+  { id: 7, name: '7 Memories', desc: 'A rich collection',   priceSEK: 249, dots: 'n7' },
+  { id: 8, name: '8 Memories', desc: 'Almost complete',     priceSEK: 269, dots: 'n8' },
+  { id: 9, name: '9 Memories', desc: 'The full journey',    priceSEK: 289, dots: 'n9' },
+];
+// Exchange rates vs SEK — update periodically
+var FX      = { SEK: 1, GBP: 0.077, EUR: 0.089, USD: 0.096, ZAR: 1.78 };
+var SYMBOLS = { SEK: 'kr', GBP: '£', EUR: '€', USD: '$', ZAR: 'R' };
+// ─────────────────────────────────────────────────────────────
+
+var currency      = 'SEK';
+var selectedPack  = null;
+var uploadedPhotos = [];
+
+function fmtPrice(sek, cur) {
+  var amt = Math.round(sek * FX[cur]);
+  return cur === 'SEK' ? amt + ' kr' : SYMBOLS[cur] + amt;
+}
+
+function renderPacks() {
+  var html = '';
+  for (var i = 0; i < PACKS.length; i++) {
+    var p = PACKS[i];
+    var dots = '';
+    for (var d = 0; d < p.id; d++) dots += '<div class="dot-sq"></div>';
+    html += '<div class="pack-card ' + (selectedPack === p.id ? 'selected' : '') + '" onclick="selectPack(' + p.id + ')">';
+    if (p.popular) html += '<div class="pack-badge">Most popular</div>';
+    html += '<div class="pack-icon"><div class="pack-dots ' + p.dots + '">' + dots + '</div></div>';
+    html += '<div class="pack-info"><div class="pack-name">' + p.name + '</div><div class="pack-desc">' + p.desc + '</div></div>';
+    html += '<div><div class="pack-price">' + fmtPrice(p.priceSEK, currency) + '</div>';
+    html += '<span class="pack-price-note">' + (currency !== 'SEK' ? 'approx.' : '&nbsp;') + '</span></div>';
+    html += '</div>';
+  }
+  document.getElementById('pack-grid').innerHTML = html;
+}
+
+function selectPack(id) {
+  selectedPack = id;
+  renderPacks();
+  document.getElementById('pack-cta').disabled = false;
+}
+
+function setCurrency(cur, btn) {
+  currency = cur;
+  var btns = document.querySelectorAll('.currency-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+  renderPacks();
+}
+
+function goTo(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'screen-photos') {
+    if (selectedPack) {
+      var sub = document.getElementById('photo-subtitle');
+      var lbl = document.getElementById('photo-max-label');
+      if (sub) sub.innerHTML = 'Upload up to <strong>' + selectedPack + '</strong> of your favourite photos from this trip.';
+      if (lbl) lbl.textContent = selectedPack;
+    }
+    updatePhotoUI();
+  }
+  if (id === 'screen-review') populateReview();
+}
+
+function handleHotelChange(sel) {
+  var other = document.getElementById('guest-hotel-other');
+  if (sel.value === 'other') {
+    other.classList.add('visible');
+    other.focus();
+  } else {
+    other.classList.remove('visible');
+    other.value = '';
+  }
+}
+
+function getHotelName() {
+  var sel = document.getElementById('guest-hotel');
+  if (sel.value === 'other') return document.getElementById('guest-hotel-other').value.trim();
+  return sel.value;
+}
+
+function validateDetails() {
+  var name  = document.getElementById('guest-name').value.trim();
+  var hotel = getHotelName();
+  var room  = document.getElementById('guest-room').value.trim();
+  var phone = document.getElementById('guest-phone').value.trim();
+  if (!name || !hotel || !room || !phone) {
+    alert('Please fill in all fields before continuing.');
+    return;
+  }
+  goTo('screen-photos');
+}
+
+function updatePhotoUI() {
+  var max = selectedPack || 9;
+  var container = document.getElementById('photos-container');
+  if (!container) return;
+  if (uploadedPhotos.length === 0) {
+    container.innerHTML = '<div class="upload-zone" onclick="document.getElementById(\'photo-input\').click()">'
+      + '<div class="upload-icon">✦</div>'
+      + '<div class="upload-title">Tap to choose photos</div>'
+      + '<div class="upload-hint">Select up to ' + max + ' from your camera roll</div>'
+      + '</div>';
+  } else {
+    var thumbs = '';
+    for (var i = 0; i < uploadedPhotos.length; i++) {
+      thumbs += '<div class="photo-thumb"><img src="' + uploadedPhotos[i] + '" alt="Photo ' + (i+1) + '">'
+        + '<div class="photo-remove" onclick="removePhoto(' + i + ')">✕</div></div>';
+    }
+    if (uploadedPhotos.length < max) {
+      thumbs += '<div class="photo-thumb" style="border:2px dashed var(--stone);display:flex;align-items:center;justify-content:center;cursor:pointer;background:white;" onclick="document.getElementById(\'photo-input\').click()"><span style="font-size:26px;color:var(--stone)">+</span></div>';
+    }
+    container.innerHTML = '<div class="photo-count-tag">✦ ' + uploadedPhotos.length + ' of ' + max + ' photos chosen</div>'
+      + '<div class="photos-grid">' + thumbs + '</div>';
+  }
+  document.getElementById('photos-cta').disabled = uploadedPhotos.length === 0;
+}
+
+function removePhoto(i) {
+  uploadedPhotos.splice(i, 1);
+  updatePhotoUI();
+}
+
+document.getElementById('photo-input').addEventListener('change', function(e) {
+  var max = selectedPack || 9;
+  var slots = max - uploadedPhotos.length;
+  var files = Array.prototype.slice.call(e.target.files, 0, slots);
+  var loaded = 0;
+  if (files.length === 0) return;
+  for (var i = 0; i < files.length; i++) {
+    (function(file) {
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        uploadedPhotos.push(ev.target.result);
+        loaded++;
+        if (loaded === files.length) updatePhotoUI();
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  this.value = '';
+});
+
+function toggleCaption(el) {
+  el.querySelector('.caption-arrow').classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+function selectPayment(el) {
+  var opts = document.querySelectorAll('.payment-option');
+  for (var i = 0; i < opts.length; i++) opts[i].classList.remove('selected');
+  el.classList.add('selected');
+}
+
+function populateReview() {
+  var p = null;
+  for (var i = 0; i < PACKS.length; i++) { if (PACKS[i].id === selectedPack) { p = PACKS[i]; break; } }
+  document.getElementById('review-pack').textContent   = p ? p.name : '—';
+  document.getElementById('review-name').textContent   = document.getElementById('guest-name').value || '—';
+  var hotel = getHotelName();
+  var room  = document.getElementById('guest-room').value;
+  document.getElementById('review-hotel').textContent  = (hotel && room) ? hotel + ', Room ' + room : '—';
+  document.getElementById('review-photos').textContent = uploadedPhotos.length + ' photo' + (uploadedPhotos.length !== 1 ? 's' : '') + ' uploaded';
+  // Total always shown in SEK (the actual charge currency)
+  document.getElementById('review-total').textContent  = p ? p.priceSEK + ' kr' : '—';
+  // If guest was viewing a different currency, show the approx equivalent below
+  var note = document.getElementById('review-fx-note');
+  if (p && currency !== 'SEK') {
+    note.textContent = 'Approx. ' + fmtPrice(p.priceSEK, currency) + ' — payment charged in SEK';
+  } else {
+    note.textContent = '';
+  }
+}
+
+function placeOrder() {
+  var ref = 'MS-' + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('confirm-ref').textContent = ref;
+  goTo('screen-confirm');
+}
+
+renderPacks();
+</script>
+</body>
+</html>
